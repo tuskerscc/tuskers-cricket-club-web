@@ -1,0 +1,370 @@
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import type { PlayerWithStats } from '@shared/schema';
+
+export default function PlayerAnalytics() {
+  const [selectedPlayer, setSelectedPlayer] = useState<PlayerWithStats | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'batting' | 'bowling' | 'fielding'>('overview');
+
+  const { data: players = [] } = useQuery<PlayerWithStats[]>({
+    queryKey: ['/api/players/with-stats'],
+  });
+
+  const playersWithStats = players.filter(player => player.stats);
+
+  // Performance metrics for charts
+  const getPlayerPerformanceData = (player: PlayerWithStats) => {
+    if (!player.stats) return null;
+
+    const batting = [
+      { name: 'Matches', value: player.stats.matches || 0 },
+      { name: 'Runs', value: player.stats.runsScored || 0 },
+      { name: 'Fours', value: player.stats.fours || 0 },
+      { name: 'Sixes', value: player.stats.sixes || 0 }
+    ];
+
+    const bowling = [
+      { name: 'Wickets', value: player.stats.wicketsTaken || 0 },
+      { name: 'Balls Bowled', value: player.stats.ballsBowled || 0 },
+      { name: 'Runs Conceded', value: player.stats.runsConceded || 0 },
+      { name: 'Economy', value: player.stats.ballsBowled ? parseFloat(((player.stats.runsConceded || 0) / ((player.stats.ballsBowled || 1) / 6)).toFixed(2)) : 0 }
+    ];
+
+    const fielding = [
+      { name: 'Catches', value: player.stats.catches || 0 },
+      { name: 'Runouts', value: player.stats.runOuts || 0 },
+      { name: 'Stumpings', value: player.stats.stumpings || 0 }
+    ];
+
+    return { batting, bowling, fielding };
+  };
+
+  // Calculate derived statistics
+  const calculateBattingAverage = (runs: number, matches: number) => {
+    return matches > 0 ? (runs / matches).toFixed(1) : '0.0';
+  };
+
+  const calculateStrikeRate = (runs: number, ballsFaced: number) => {
+    return ballsFaced > 0 ? ((runs / ballsFaced) * 100).toFixed(1) : '0.0';
+  };
+
+  const calculateEconomyRate = (runsConceded: number, ballsBowled: number) => {
+    return ballsBowled > 0 ? ((runsConceded / ballsBowled) * 6).toFixed(2) : '0.00';
+  };
+
+  // Team performance overview
+  const teamStatsData = playersWithStats.map(player => ({
+    name: player.name.split(' ')[0], // First name only for chart
+    runs: player.stats?.runsScored || 0,
+    wickets: player.stats?.wicketsTaken || 0,
+    average: parseFloat(calculateBattingAverage(player.stats?.runsScored || 0, player.stats?.matches || 0)),
+    strikeRate: parseFloat(calculateStrikeRate(player.stats?.runsScored || 0, player.stats?.ballsFaced || 0))
+  }));
+
+  // Player role distribution based on performance
+  const getPlayerRole = (player: PlayerWithStats) => {
+    const runs = player.stats?.runsScored || 0;
+    const wickets = player.stats?.wicketsTaken || 0;
+    
+    if (runs > 500 && wickets > 10) return 'All-rounder';
+    if (runs > 300) return 'Batsman';
+    if (wickets > 15) return 'Bowler';
+    if (player.stats?.catches && player.stats.catches > 5) return 'Wicket-keeper';
+    return 'All-rounder';
+  };
+
+  const roleDistribution = players.reduce((acc, player) => {
+    const role = getPlayerRole(player);
+    acc[role] = (acc[role] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const roleData = Object.entries(roleDistribution).map(([role, count]) => ({
+    name: role,
+    value: count
+  }));
+
+  const COLORS = ['#1e3a8a', '#f59e0b', '#dc2626', '#059669', '#7c3aed'];
+
+  return (
+    <section className="py-16 bg-gray-50">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-blue-900 mb-4">Player Analytics</h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Advanced performance insights and statistical analysis of our talented squad
+          </p>
+        </div>
+
+        {/* Team Overview Charts */}
+        <div className="grid lg:grid-cols-2 gap-8 mb-12">
+          {/* Team Performance Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-blue-900">Team Performance Overview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={teamStatsData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="runs" fill="#1e3a8a" name="Runs Scored" />
+                  <Bar dataKey="wickets" fill="#f59e0b" name="Wickets Taken" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Player Roles Distribution */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-blue-900">Squad Composition</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={roleData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) => `${name}: ${value}`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {roleData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Player Selection */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="text-blue-900">Individual Player Analysis</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {playersWithStats.map((player) => (
+                <button
+                  key={player.id}
+                  onClick={() => setSelectedPlayer(player)}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    selectedPlayer?.id === player.id
+                      ? 'border-blue-900 bg-blue-50'
+                      : 'border-gray-200 hover:border-blue-300 bg-white'
+                  }`}
+                >
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-blue-900 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-2">
+                      {player.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <h4 className="font-semibold text-blue-900">{player.name}</h4>
+                    <p className="text-sm text-gray-600">#{player.jerseyNumber}</p>
+                    <p className="text-xs text-gray-500">{getPlayerRole(player)}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Individual Player Analytics */}
+        {selectedPlayer && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-blue-900">{selectedPlayer.name} Analytics</CardTitle>
+                <p className="text-gray-600">{getPlayerRole(selectedPlayer)} • Jersey #{selectedPlayer.jerseyNumber}</p>
+              </div>
+              <div className="flex bg-gray-100 rounded-lg p-1">
+                {['overview', 'batting', 'bowling', 'fielding'].map((tab) => (
+                  <Button
+                    key={tab}
+                    onClick={() => setActiveTab(tab as any)}
+                    variant={activeTab === tab ? "default" : "ghost"}
+                    size="sm"
+                    className={`capitalize ${
+                      activeTab === tab
+                        ? 'bg-blue-900 text-white'
+                        : 'text-gray-600 hover:text-blue-900'
+                    }`}
+                  >
+                    {tab}
+                  </Button>
+                ))}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {/* Player Stats Display */}
+              {selectedPlayer.stats && (
+                <div className="grid lg:grid-cols-2 gap-8">
+                  {activeTab === 'overview' && (
+                    <>
+                      <div>
+                        <h4 className="text-lg font-semibold text-blue-900 mb-4">Career Overview</h4>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium">Matches Played</span>
+                            <span className="text-blue-900 font-bold">{selectedPlayer.stats.matches || 0}</span>
+                          </div>
+                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium">Total Runs</span>
+                            <span className="text-blue-900 font-bold">{selectedPlayer.stats.runsScored || 0}</span>
+                          </div>
+                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium">Wickets Taken</span>
+                            <span className="text-blue-900 font-bold">{selectedPlayer.stats.wicketsTaken || 0}</span>
+                          </div>
+                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium">Batting Average</span>
+                            <span className="text-blue-900 font-bold">{calculateBattingAverage(selectedPlayer.stats.runsScored || 0, selectedPlayer.stats.matches || 0)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-semibold text-blue-900 mb-4">Performance Radar</h4>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <RadarChart data={[
+                            { subject: 'Runs', A: Math.min((selectedPlayer.stats.runsScored || 0) / 10, 100) },
+                            { subject: 'Wickets', A: Math.min((selectedPlayer.stats.wicketsTaken || 0) * 5, 100) },
+                            { subject: 'Fours', A: Math.min((selectedPlayer.stats.fours || 0) * 2, 100) },
+                            { subject: 'Sixes', A: Math.min((selectedPlayer.stats.sixes || 0) * 10, 100) },
+                            { subject: 'Fielding', A: Math.min(((selectedPlayer.stats.catches || 0) + (selectedPlayer.stats.runOuts || 0)) * 10, 100) }
+                          ]}>
+                            <PolarGrid />
+                            <PolarAngleAxis dataKey="subject" />
+                            <PolarRadiusAxis domain={[0, 100]} />
+                            <Radar name="Performance" dataKey="A" stroke="#1e3a8a" fill="#1e3a8a" fillOpacity={0.3} />
+                          </RadarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </>
+                  )}
+
+                  {activeTab === 'batting' && (
+                    <>
+                      <div>
+                        <h4 className="text-lg font-semibold text-blue-900 mb-4">Batting Statistics</h4>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <BarChart data={getPlayerPerformanceData(selectedPlayer)?.batting || []}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Bar dataKey="value" fill="#1e3a8a" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-semibold text-blue-900 mb-4">Batting Metrics</h4>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium">Balls Faced</span>
+                            <span className="text-blue-900 font-bold">{selectedPlayer.stats.ballsFaced || 0}</span>
+                          </div>
+                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium">Strike Rate</span>
+                            <span className="text-blue-900 font-bold">{calculateStrikeRate(selectedPlayer.stats.runsScored || 0, selectedPlayer.stats.ballsFaced || 0)}</span>
+                          </div>
+                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium">Fours</span>
+                            <span className="text-blue-900 font-bold">{selectedPlayer.stats.fours || 0}</span>
+                          </div>
+                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium">Sixes</span>
+                            <span className="text-blue-900 font-bold">{selectedPlayer.stats.sixes || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {activeTab === 'bowling' && (
+                    <>
+                      <div>
+                        <h4 className="text-lg font-semibold text-blue-900 mb-4">Bowling Statistics</h4>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <BarChart data={getPlayerPerformanceData(selectedPlayer)?.bowling || []}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Bar dataKey="value" fill="#1e3a8a" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-semibold text-blue-900 mb-4">Bowling Metrics</h4>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium">Economy Rate</span>
+                            <span className="text-blue-900 font-bold">{calculateEconomyRate(selectedPlayer.stats.runsConceded || 0, selectedPlayer.stats.ballsBowled || 0)}</span>
+                          </div>
+                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium">Balls Bowled</span>
+                            <span className="text-blue-900 font-bold">{selectedPlayer.stats.ballsBowled || 0}</span>
+                          </div>
+                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium">Runs Conceded</span>
+                            <span className="text-blue-900 font-bold">{selectedPlayer.stats.runsConceded || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {activeTab === 'fielding' && (
+                    <>
+                      <div>
+                        <h4 className="text-lg font-semibold text-blue-900 mb-4">Fielding Statistics</h4>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <BarChart data={getPlayerPerformanceData(selectedPlayer)?.fielding || []}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Bar dataKey="value" fill="#1e3a8a" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-semibold text-blue-900 mb-4">Fielding Metrics</h4>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium">Catches</span>
+                            <span className="text-blue-900 font-bold">{selectedPlayer.stats.catches || 0}</span>
+                          </div>
+                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium">Run Outs</span>
+                            <span className="text-blue-900 font-bold">{selectedPlayer.stats.runOuts || 0}</span>
+                          </div>
+                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium">Stumpings</span>
+                            <span className="text-blue-900 font-bold">{selectedPlayer.stats.stumpings || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </section>
+  );
+}
