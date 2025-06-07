@@ -106,6 +106,35 @@ const galleryItemSchema = z.object({
   isVisible: z.boolean().default(true),
 });
 
+// Season statistics form schema
+const seasonStatsSchema = z.object({
+  matchDate: z.string().min(1, 'Match date is required'),
+  venue: z.string().min(1, 'Venue is required'),
+  opponent: z.string().min(1, 'Opponent is required'),
+  ourScore: z.number().min(0, 'Score must be positive'),
+  theirScore: z.number().min(0, 'Score must be positive'),
+  ourWickets: z.number().min(0).max(10, 'Wickets must be between 0-10'),
+  theirWickets: z.number().min(0).max(10, 'Wickets must be between 0-10'),
+  ourOvers: z.number().min(0, 'Overs must be positive'),
+  theirOvers: z.number().min(0, 'Overs must be positive'),
+  ourExtras: z.number().min(0).default(0),
+  theirExtras: z.number().min(0).default(0),
+  result: z.enum(['Won', 'Lost', 'Draw', 'Tied']),
+});
+
+// Player statistics form schema
+const playerStatsSchema = z.object({
+  playerId: z.number().min(1, 'Player is required'),
+  matches: z.number().min(0).default(0),
+  runsScored: z.number().min(0).default(0),
+  ballsFaced: z.number().min(0).default(0),
+  wicketsTaken: z.number().min(0).default(0),
+  ballsBowled: z.number().min(0).default(0),
+  catches: z.number().min(0).default(0),
+  stumpings: z.number().min(0).default(0),
+  runOuts: z.number().min(0).default(0),
+});
+
 export default function AdminPage() {
   const [location, navigate] = useLocation();
   const { isAuthenticated, isAdmin, login, user } = useAuth();
@@ -114,7 +143,7 @@ export default function AdminPage() {
   
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
-  const [dialogType, setDialogType] = useState<'hero' | 'news' | 'player' | 'gallery' | null>(null);
+  const [dialogType, setDialogType] = useState<'hero' | 'news' | 'player' | 'gallery' | 'season-stats' | 'player-stats' | null>(null);
 
   // Login form
   const loginForm = useForm({
@@ -167,6 +196,39 @@ export default function AdminPage() {
       category: 'Photos',
       date: '',
       isVisible: true,
+    },
+  });
+
+  const seasonStatsForm = useForm({
+    resolver: zodResolver(seasonStatsSchema),
+    defaultValues: {
+      matchDate: '',
+      venue: '',
+      opponent: '',
+      ourScore: 0,
+      theirScore: 0,
+      ourWickets: 0,
+      theirWickets: 0,
+      ourOvers: 0,
+      theirOvers: 0,
+      ourExtras: 0,
+      theirExtras: 0,
+      result: 'Won' as const,
+    },
+  });
+
+  const playerStatsForm = useForm({
+    resolver: zodResolver(playerStatsSchema),
+    defaultValues: {
+      playerId: 0,
+      matches: 0,
+      runsScored: 0,
+      ballsFaced: 0,
+      wicketsTaken: 0,
+      ballsBowled: 0,
+      catches: 0,
+      stumpings: 0,
+      runOuts: 0,
     },
   });
 

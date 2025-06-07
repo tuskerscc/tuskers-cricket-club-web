@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Heart, MessageCircle, Share2, ArrowRight } from 'lucide-react';
+import { Heart, MessageCircle, Share2, ArrowRight, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
 import type { NewsArticle } from '@shared/schema';
@@ -63,11 +63,21 @@ export default function NewsSection({ limit = 3, showViewAll = true }: NewsSecti
   return (
     <section className="py-16 bg-blue-900">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-white mb-4">Latest News</h2>
-          <p className="text-xl text-blue-300 max-w-3xl mx-auto">
-            Stay updated with the latest happenings from Tuskers Cricket Club
-          </p>
+        <div className="flex justify-between items-center mb-12">
+          <div>
+            <h2 className="text-4xl font-bold text-white mb-4">Latest News</h2>
+            <p className="text-xl text-blue-300 max-w-3xl">
+              Stay updated with the latest happenings from Tuskers Cricket Club
+            </p>
+          </div>
+          {showViewAll && (
+            <Link href="/news">
+              <Button variant="outline" className="bg-transparent border-white text-white hover:bg-white hover:text-blue-900">
+                <ExternalLink className="w-4 h-4 mr-2" />
+                View Full
+              </Button>
+            </Link>
+          )}
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">

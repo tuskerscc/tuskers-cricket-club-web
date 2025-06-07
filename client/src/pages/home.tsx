@@ -3,6 +3,7 @@ import NewsSection from '@/components/news-section';
 import TeamSection from '@/components/team-section';
 import GallerySection from '@/components/gallery-section';
 import StatsSection from '@/components/stats-section';
+import Footer from '@/components/layout/footer';
 
 export default function HomePage() {
   return (
@@ -12,6 +13,7 @@ export default function HomePage() {
       <TeamSection limit={5} />
       <GallerySection limit={6} />
       <StatsSection />
+      <Footer />
     </div>
   );
 }
