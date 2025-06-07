@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Expand } from 'lucide-react';
+import { Expand, ExternalLink } from 'lucide-react';
 import { Link } from 'wouter';
 import type { GalleryItem } from '@shared/schema';
 

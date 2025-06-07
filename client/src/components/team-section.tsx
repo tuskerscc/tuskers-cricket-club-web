@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'wouter';
+import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import { useState } from 'react';
 import type { PlayerWithStats } from '@shared/schema';
 
 interface TeamSectionProps {
@@ -13,6 +15,10 @@ export default function TeamSection({ limit = 5, showViewAll = true }: TeamSecti
   const { data: players = [], isLoading } = useQuery<PlayerWithStats[]>({
     queryKey: ['/api/players/with-stats'],
   });
+  
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const slidesToShow = 3;
+  const maxSlides = Math.max(0, players.length - slidesToShow);
 
   const displayPlayers = limit ? players.slice(0, limit) : players;
 

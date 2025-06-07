@@ -126,10 +126,10 @@ export default function HeroSection() {
         <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-transparent"></div>
       </div>
 
-      <div className="container mx-auto relative px-4 h-full flex items-center">
-        <div className="grid lg:grid-cols-12 gap-8 w-full items-center">
+      <div className="container mx-auto relative px-4 h-full flex">
+        <div className="grid lg:grid-cols-12 gap-0 w-full h-full">
           {/* Left Content Panel */}
-          <div className="lg:col-span-5 text-white z-10">
+          <div className="lg:col-span-7 text-white z-10 flex flex-col justify-center">
             {/* Date */}
             <div className="text-sm text-yellow-400 font-medium mb-3 uppercase tracking-wide">
               {currentSlideData.date}
@@ -144,41 +144,6 @@ export default function HeroSection() {
             <p className="text-gray-200 text-lg mb-6 leading-relaxed">
               {currentSlideData.description}
             </p>
-
-            {/* Social Actions Bar */}
-            <div className="flex items-center space-x-6 mb-6 bg-black/20 backdrop-blur-sm rounded-lg p-4">
-              <button
-                onClick={() => likeMutation.mutate()}
-                disabled={likeMutation.isPending}
-                className="flex items-center space-x-2 text-red-400 hover:text-red-300 transition-colors"
-              >
-                <Heart className="w-5 h-5" />
-                <span className="font-medium">{socialData?.likes || 0}</span>
-              </button>
-              
-              <button
-                onClick={() => dislikeMutation.mutate()}
-                disabled={dislikeMutation.isPending}
-                className="flex items-center space-x-2 text-gray-400 hover:text-gray-300 transition-colors"
-              >
-                <ThumbsDown className="w-5 h-5" />
-                <span className="font-medium">{socialData?.dislikes || 0}</span>
-              </button>
-              
-              <div className="flex items-center space-x-2 text-blue-400">
-                <MessageCircle className="w-5 h-5" />
-                <span className="font-medium">{comments.length} comments</span>
-              </div>
-              
-              <button
-                onClick={() => shareMutation.mutate()}
-                disabled={shareMutation.isPending}
-                className="flex items-center space-x-2 text-green-400 hover:text-green-300 transition-colors"
-              >
-                <Share2 className="w-5 h-5" />
-                <span className="font-medium">Share</span>
-              </button>
-            </div>
 
             {/* Slide Navigation */}
             {slides.length > 1 && (
@@ -198,11 +163,46 @@ export default function HeroSection() {
             )}
           </div>
 
-          {/* Right Comments Panel */}
-          <div className="lg:col-span-4 lg:col-start-9 z-10">
-            <div className="bg-white/95 backdrop-blur-sm rounded-lg p-6 max-w-md ml-auto">
+          {/* Right Comments Panel - Full Height */}
+          <div className="lg:col-span-5 z-10 h-full">
+            <div className="bg-white/95 backdrop-blur-sm h-full flex flex-col">
+              {/* Social Actions Bar */}
+              <div className="flex items-center justify-around p-4 border-b border-gray-200 bg-gray-50">
+                <button
+                  onClick={() => likeMutation.mutate()}
+                  disabled={likeMutation.isPending}
+                  className="flex items-center space-x-2 text-red-400 hover:text-red-300 transition-colors"
+                >
+                  <Heart className="w-5 h-5" />
+                  <span className="font-medium">{socialData?.likes || 0}</span>
+                </button>
+                
+                <button
+                  onClick={() => dislikeMutation.mutate()}
+                  disabled={dislikeMutation.isPending}
+                  className="flex items-center space-x-2 text-gray-400 hover:text-gray-300 transition-colors"
+                >
+                  <ThumbsDown className="w-5 h-5" />
+                  <span className="font-medium">{socialData?.dislikes || 0}</span>
+                </button>
+                
+                <div className="flex items-center space-x-2 text-blue-400">
+                  <MessageCircle className="w-5 h-5" />
+                  <span className="font-medium">{comments.length} comments</span>
+                </div>
+                
+                <button
+                  onClick={() => shareMutation.mutate()}
+                  disabled={shareMutation.isPending}
+                  className="flex items-center space-x-2 text-green-400 hover:text-green-300 transition-colors"
+                >
+                  <Share2 className="w-5 h-5" />
+                  <span className="font-medium">Share</span>
+                </button>
+              </div>
+
               {/* Comment Input */}
-              <div className="mb-4">
+              <div className="p-4 border-b border-gray-200">
                 <div className="flex space-x-2">
                   <Input
                     value={newComment}
@@ -221,9 +221,9 @@ export default function HeroSection() {
                 </div>
               </div>
 
-              {/* Comments List */}
-              <div className="space-y-3 max-h-80 overflow-y-auto">
-                {comments.slice(0, 5).map((comment) => (
+              {/* Comments List - Full Remaining Height */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {comments.map((comment) => (
                   <div key={comment.id} className="border-b border-gray-200 pb-3">
                     <div className="flex items-center space-x-2 mb-1">
                       <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
@@ -236,7 +236,7 @@ export default function HeroSection() {
                           {comment.userName}
                         </span>
                         <div className="text-gray-500 text-xs">
-                          rohit hardik ke field placement ke sath bilkul thush nahi tha aur fir
+                          {new Date(comment.createdAt).toLocaleTimeString()}
                         </div>
                       </div>
                     </div>
@@ -253,7 +253,7 @@ export default function HeroSection() {
                   </div>
                 ))}
                 
-                {/* Example static comment to match design */}
+                {/* Sample comments to show functionality */}
                 <div className="border-b border-gray-200 pb-3">
                   <div className="flex items-center space-x-2 mb-1">
                     <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
@@ -305,27 +305,7 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Social sidebar (right edge) */}
-      <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex flex-col space-y-4 z-20">
-        <a href="#" className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors">
-          <span className="text-sm font-bold">f</span>
-        </a>
-        <a href="#" className="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white hover:bg-gray-800 transition-colors">
-          <span className="text-sm font-bold">X</span>
-        </a>
-        <a href="#" className="w-10 h-10 bg-pink-600 rounded-full flex items-center justify-center text-white hover:bg-pink-700 transition-colors">
-          <span className="text-sm font-bold">@</span>
-        </a>
-        <a href="#" className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white hover:bg-red-700 transition-colors">
-          <span className="text-sm font-bold">▶</span>
-        </a>
-        <a href="#" className="w-10 h-10 bg-blue-700 rounded-full flex items-center justify-center text-white hover:bg-blue-800 transition-colors">
-          <span className="text-sm font-bold">in</span>
-        </a>
-        <a href="#" className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white hover:bg-green-700 transition-colors">
-          <span className="text-sm font-bold">📱</span>
-        </a>
-      </div>
+
     </section>
   );
 }
