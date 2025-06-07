@@ -93,13 +93,7 @@ export default function Header() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : (
-            <Link href="/admin">
-              <Button variant="ghost" className="text-white hover:text-yellow-500 border border-yellow-500">
-                Admin Login
-              </Button>
-            </Link>
-          )}
+          ) : null}
 
           <Link href="/registration">
             <Button className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold">
@@ -154,13 +148,7 @@ export default function Header() {
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout
                 </Button>
-              ) : (
-                <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="ghost" className="text-white hover:text-yellow-500 w-full justify-start">
-                    Admin Login
-                  </Button>
-                </Link>
-              )}
+              ) : null}
 
               <Link href="/registration" onClick={() => setMobileMenuOpen(false)}>
                 <Button className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold mt-2">
