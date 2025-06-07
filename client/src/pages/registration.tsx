@@ -128,8 +128,12 @@ export default function RegistrationPage() {
       <div className="container mx-auto px-4 max-w-3xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-yellow-500 rounded-full mx-auto mb-4 flex items-center justify-center">
-            <span className="text-2xl font-bold text-blue-900">🏏</span>
+          <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+            <img 
+              src="/tuskers-logo.png" 
+              alt="Tuskers CC Logo" 
+              className="w-16 h-16 object-contain"
+            />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Tuskers CC - Player Registration Form</h1>
           <p className="text-blue-200">Season 2025/26</p>

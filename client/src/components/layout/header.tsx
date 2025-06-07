@@ -33,9 +33,11 @@ export default function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
-          <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
-            <span className="text-blue-900 font-bold text-lg">T</span>
-          </div>
+          <img 
+            src="/tuskers-logo.png" 
+            alt="Tuskers CC Logo" 
+            className="w-12 h-12 object-contain"
+          />
           <div>
             <h1 className="text-xl font-bold text-yellow-500">Tuskers CC</h1>
             <p className="text-sm text-blue-300 font-medium">Est. 2022</p>
@@ -98,7 +100,7 @@ export default function Header() {
               </Button>
             </Link>
           )}
-          
+
           <Link href="/registration">
             <Button className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold">
               Season Registration
@@ -139,7 +141,7 @@ export default function Header() {
                   Admin
                 </Link>
               )}
-              
+
               {isAuthenticated ? (
                 <Button
                   onClick={() => {
@@ -159,7 +161,7 @@ export default function Header() {
                   </Button>
                 </Link>
               )}
-              
+
               <Link href="/registration" onClick={() => setMobileMenuOpen(false)}>
                 <Button className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold mt-2">
                   Season Registration

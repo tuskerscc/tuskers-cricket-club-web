@@ -15,7 +15,8 @@ import {
   Settings,
   CheckCircle,
   XCircle,
-  Clock
+  Clock,
+  Upload
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -140,9 +141,10 @@ export default function AdminPage() {
   const { isAuthenticated, isAdmin, login, user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [dialogType, setDialogType] = useState<'hero' | 'news' | 'player' | 'gallery' | 'season-stats' | 'player-stats' | null>(null);
 
   // Login form
@@ -1138,13 +1140,7 @@ export default function AdminPage() {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="playerImage">Image URL</Label>
-                  <Input
-                    id="playerImage"
-                    {...playerForm.register('image')}
-                    className="mt-1"
-                    placeholder="https://..."
-                  />
+                 <ImageUpload setFormValue={(url: string) => playerForm.setValue('image', url)} />
                   {playerForm.formState.errors.image && (
                     <p className="text-red-500 text-sm mt-1">{playerForm.formState.errors.image.message}</p>
                   )}
@@ -1193,13 +1189,7 @@ export default function AdminPage() {
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="galleryImage">Image URL</Label>
-                  <Input
-                    id="galleryImage"
-                    {...galleryForm.register('image')}
-                    className="mt-1"
-                    placeholder="https://..."
-                  />
+                 <ImageUpload setFormValue={(url: string) => galleryForm.setValue('image', url)} />
                   {galleryForm.formState.errors.image && (
                     <p className="text-red-500 text-sm mt-1">{galleryForm.formState.errors.image.message}</p>
                   )}
@@ -1246,6 +1236,68 @@ export default function AdminPage() {
           </DialogContent>
         </Dialog>
       </div>
+    </div>
+  );
+}
+
+function ImageUpload({ setFormValue }: { setFormValue: (url: string) => void }) {
+  const [image, setImage] = useState<File | null>(null);
+  const [previewURL, setPreviewURL] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImage(file);
+      setPreviewURL(URL.createObjectURL(file));
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!image) {
+      toast({ title: 'Please select an image', variant: 'destructive' });
+      return;
+    }
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('image', image);
+
+    try {
+      const response = await authenticatedRequest('POST', '/api/upload', formData, {
+        'Content-Type': 'multipart/form-data',
+      });
+
+      if (response.imageUrl) {
+        setFormValue(response.imageUrl);
+        toast({ title: 'Image uploaded successfully!' });
+      } else {
+        toast({ title: 'Image upload failed', variant: 'destructive' });
+      }
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div>
+      <Label htmlFor="imageUpload">Upload Image</Label>
+      <Input
+        type="file"
+        id="imageUpload"
+        accept="image/*"
+        className="mt-1"
+        onChange={handleImageChange}
+      />
+      {previewURL && (
+        <img src={previewURL} alt="Preview" className="mt-2 max-h-32 rounded-md" />
+      )}
+      <Button type="button" className="bg-blue-900 hover:bg-blue-800 mt-2" onClick={handleUpload} disabled={uploading}>
+        {uploading ? 'Uploading...' : <><Upload className="w-4 h-4 mr-2" /> Upload</>}
+      </Button>
     </div>
   );
 }

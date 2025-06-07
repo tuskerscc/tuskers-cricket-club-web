@@ -4,17 +4,57 @@ import { storage } from "./storage";
 import { insertHeroSlideSchema, insertNewsArticleSchema, insertPlayerSchema, insertPlayerStatsSchema, insertGalleryItemSchema, insertSocialInteractionSchema, insertCommentSchema, insertPlayerRegistrationSchema } from "@shared/schema";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import express from 'express';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { db } from './db';
+import * as schema from '../shared/schema';
+import { eq } from 'drizzle-orm';
+
+// Configure multer for file uploads
+const multerStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = 'public/uploads';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: multerStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
 
 const JWT_SECRET = process.env.JWT_SECRET || "tuskers_cricket_club_secret_2024";
 
 // Middleware to verify admin token
 function verifyAdmin(req: any, res: any, next: any) {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  
+
   if (!token) {
     return res.status(401).json({ message: "No token provided" });
   }
-  
+
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     req.user = decoded;
@@ -29,27 +69,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { username, password } = req.body;
-      
+
       if (!username || !password) {
         return res.status(400).json({ message: "Username and password required" });
       }
-      
+
       const user = await storage.getUserByUsername(username);
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
-      
+
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
-      
+
       const token = jwt.sign(
         { id: user.id, username: user.username, role: user.role },
         JWT_SECRET,
         { expiresIn: '24h' }
       );
-      
+
       res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
     } catch (error) {
       console.error('Login error:', error);
@@ -392,6 +432,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Fetch team statistics error:', error);
       res.status(500).json({ message: "Failed to fetch team statistics" });
     }
+  });
+  // Image upload endpoint
+  app.post('/api/upload/image', verifyAdmin, upload.single('image'), (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+      }
+
+      const imageUrl = `/uploads/${req.file.filename}`;
+      res.json({ imageUrl });
+    } catch (error) {
+      console.error('Upload error:', error);
+      res.status(500).json({ error: 'Failed to upload image' });
+    }
+  });
+
+  // Placeholder image generator
+  app.get('/api/placeholder/:width/:height', (req, res) => {
+    const { width, height } = req.params;
+
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.send(`
+      <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="#ddd"/>
+        <text x="50%" y="50%" font-family="Arial" font-size="20" fill="#999" text-anchor="middle" dy=".3em">
+          ${width}x${height}
+        </text>
+      </svg>
+    `);
   });
 
   const httpServer = createServer(app);
