@@ -210,4 +210,23 @@ export type PlayerRegistration = typeof playerRegistrations.$inferSelect;
 export type InsertPlayerRegistration = z.infer<typeof insertPlayerRegistrationSchema>;
 
 // Extended types with relations
+// Tournaments table (example of adding a new table)
+export const tournaments = pgTable("tournaments", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  startDate: text("start_date").notNull(),
+  endDate: text("end_date").notNull(),
+  venue: text("venue").notNull(),
+  status: text("status").default("upcoming").notNull(), // upcoming, ongoing, completed
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertTournamentSchema = createInsertSchema(tournaments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type Tournament = typeof tournaments.$inferSelect;
+export type InsertTournament = z.infer<typeof insertTournamentSchema>;
+
 export type PlayerWithStats = Player & { stats?: PlayerStats };
