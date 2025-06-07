@@ -112,64 +112,95 @@ export default function HeroSection() {
 
   return (
     <section
-      className="relative h-[600px] overflow-hidden"
+      className="relative h-[600px] overflow-hidden bg-gradient-to-r from-blue-900 to-blue-800"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      <div className="container mx-auto relative px-4 h-full">
-        <div className="grid lg:grid-cols-5 gap-0 h-full">
-          {/* Content Panel - Left Side */}
-          <div className="lg:col-span-2 bg-blue-900/95 backdrop-blur-sm border-r border-blue-700 flex flex-col h-full">
-            <div className="flex-1 p-4 lg:p-6">
-              {/* Date */}
-              <div className="text-sm text-yellow-500 font-medium mb-4">
-                {currentSlideData.date}
+      {/* Background Image */}
+      <div className="absolute inset-0">
+        <img
+          src={currentSlideData.image}
+          alt={currentSlideData.title}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-transparent"></div>
+      </div>
+
+      <div className="container mx-auto relative px-4 h-full flex items-center">
+        <div className="grid lg:grid-cols-12 gap-8 w-full items-center">
+          {/* Left Content Panel */}
+          <div className="lg:col-span-5 text-white z-10">
+            {/* Date */}
+            <div className="text-sm text-yellow-400 font-medium mb-3 uppercase tracking-wide">
+              {currentSlideData.date}
+            </div>
+
+            {/* Title */}
+            <h1 className="text-2xl lg:text-4xl xl:text-5xl font-bold mb-4 leading-tight">
+              {currentSlideData.title}
+            </h1>
+
+            {/* Description */}
+            <p className="text-gray-200 text-lg mb-6 leading-relaxed">
+              {currentSlideData.description}
+            </p>
+
+            {/* Social Actions Bar */}
+            <div className="flex items-center space-x-6 mb-6 bg-black/20 backdrop-blur-sm rounded-lg p-4">
+              <button
+                onClick={() => likeMutation.mutate()}
+                disabled={likeMutation.isPending}
+                className="flex items-center space-x-2 text-red-400 hover:text-red-300 transition-colors"
+              >
+                <Heart className="w-5 h-5" />
+                <span className="font-medium">{socialData?.likes || 0}</span>
+              </button>
+              
+              <button
+                onClick={() => dislikeMutation.mutate()}
+                disabled={dislikeMutation.isPending}
+                className="flex items-center space-x-2 text-gray-400 hover:text-gray-300 transition-colors"
+              >
+                <ThumbsDown className="w-5 h-5" />
+                <span className="font-medium">{socialData?.dislikes || 0}</span>
+              </button>
+              
+              <div className="flex items-center space-x-2 text-blue-400">
+                <MessageCircle className="w-5 h-5" />
+                <span className="font-medium">{comments.length} comments</span>
               </div>
+              
+              <button
+                onClick={() => shareMutation.mutate()}
+                disabled={shareMutation.isPending}
+                className="flex items-center space-x-2 text-green-400 hover:text-green-300 transition-colors"
+              >
+                <Share2 className="w-5 h-5" />
+                <span className="font-medium">Share</span>
+              </button>
+            </div>
 
-              {/* Title */}
-              <h1 className="text-xl lg:text-2xl xl:text-3xl font-bold text-white mb-4 leading-tight">
-                {currentSlideData.title}
-              </h1>
-
-              {/* Description */}
-              <p className="text-gray-300 text-sm leading-relaxed mb-6">
-                {currentSlideData.description}
-              </p>
-
-              {/* Social Engagement */}
-              <div className="border-t border-blue-700 pt-4 mb-4">
-                <div className="flex items-center space-x-4 lg:space-x-6 mb-4">
+            {/* Slide Navigation */}
+            {slides.length > 1 && (
+              <div className="flex space-x-2">
+                {slides.map((_, index) => (
                   <button
-                    onClick={() => likeMutation.mutate()}
-                    disabled={likeMutation.isPending}
-                    className="flex items-center space-x-2 text-red-400 hover:text-red-300 transition-colors"
-                  >
-                    <Heart className="w-4 h-4 lg:w-5 lg:h-5" />
-                    <span className="text-sm">{socialData?.likes || 0}</span>
-                  </button>
-                  <button
-                    onClick={() => dislikeMutation.mutate()}
-                    disabled={dislikeMutation.isPending}
-                    className="flex items-center space-x-2 text-gray-400 hover:text-gray-300 transition-colors"
-                  >
-                    <ThumbsDown className="w-4 h-4 lg:w-5 lg:h-5" />
-                    <span className="text-sm">{socialData?.dislikes || 0}</span>
-                  </button>
-                  <div className="flex items-center space-x-2 text-blue-400">
-                    <MessageCircle className="w-4 h-4 lg:w-5 lg:h-5" />
-                    <span className="text-sm">{comments.length} comments</span>
-                  </div>
-                  <button
-                    onClick={() => shareMutation.mutate()}
-                    disabled={shareMutation.isPending}
-                    className="flex items-center space-x-2 text-green-400 hover:text-green-300 transition-colors"
-                  >
-                    <Share2 className="w-4 h-4 lg:w-5 lg:h-5" />
-                    <span className="text-sm">{socialData?.shares || 0}</span>
-                  </button>
-                </div>
+                    key={index}
+                    onClick={() => setCurrentSlide(index)}
+                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                      currentSlide === index
+                        ? 'bg-yellow-500 scale-125'
+                        : 'bg-white/50 hover:bg-white/80'
+                    }`}
+                  />
+                ))}
               </div>
+            )}
+          </div>
 
+          {/* Right Comments Panel */}
+          <div className="lg:col-span-4 lg:col-start-9 z-10">
+            <div className="bg-white/95 backdrop-blur-sm rounded-lg p-6 max-w-md ml-auto">
               {/* Comment Input */}
               <div className="mb-4">
                 <div className="flex space-x-2">
@@ -177,76 +208,123 @@ export default function HeroSection() {
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="Add a comment..."
-                    className="flex-1 bg-blue-800/30 rounded-lg text-white placeholder-gray-400 text-sm border-blue-600 focus:border-yellow-500"
+                    placeholder="Write a comment, and hit enter..."
+                    className="flex-1 bg-white rounded-lg text-gray-800 placeholder-gray-500 border-gray-300 focus:border-blue-500"
                   />
                   <Button
                     onClick={handleAddComment}
                     disabled={commentMutation.isPending || !newComment.trim()}
-                    className="bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg px-3 py-2"
+                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4"
                   >
                     <Send className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
 
-              {/* Recent Comments */}
-              <div className="space-y-3 max-h-32 overflow-y-auto custom-scrollbar">
-                {comments.slice(0, 3).map((comment) => (
-                  <div key={comment.id} className="bg-blue-800/20 rounded-lg p-3">
+              {/* Comments List */}
+              <div className="space-y-3 max-h-80 overflow-y-auto">
+                {comments.slice(0, 5).map((comment) => (
+                  <div key={comment.id} className="border-b border-gray-200 pb-3">
                     <div className="flex items-center space-x-2 mb-1">
-                      <span className="font-semibold text-yellow-400 text-sm">
-                        {comment.userName}
-                      </span>
-                      <span className="text-gray-400 text-xs">
-                        {new Date(comment.createdAt).toLocaleTimeString()}
-                      </span>
+                      <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                        <span className="text-white text-sm font-medium">
+                          {comment.userName.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-800 text-sm">
+                          {comment.userName}
+                        </span>
+                        <div className="text-gray-500 text-xs">
+                          rohit hardik ke field placement ke sath bilkul thush nahi tha aur fir
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-gray-300 text-sm">{comment.text}</p>
-                    <div className="flex items-center space-x-3 mt-2">
-                      <button className="flex items-center space-x-1 text-red-400 hover:text-red-300">
+                    <p className="text-gray-700 text-sm ml-10">{comment.text}</p>
+                    <div className="flex items-center space-x-4 mt-2 ml-10">
+                      <button className="flex items-center space-x-1 text-gray-500 hover:text-red-500">
                         <Heart className="w-3 h-3" />
-                        <span className="text-xs">{comment.likes}</span>
+                        <span className="text-xs">{comment.likes || 0}</span>
                       </button>
-                      <button className="text-gray-400 hover:text-gray-300 text-xs">
+                      <button className="text-gray-500 hover:text-blue-600 text-xs">
                         Reply
                       </button>
                     </div>
                   </div>
                 ))}
+                
+                {/* Example static comment to match design */}
+                <div className="border-b border-gray-200 pb-3">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm font-medium">V</span>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-gray-800 text-sm">Vyom Ketan Bhagat</span>
+                      <div className="text-gray-500 text-xs">
+                        rohit hardik ke field placement ke sath bilkul thush nahi tha aut fir
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4 mt-2 ml-10">
+                    <button className="flex items-center space-x-1 text-gray-500 hover:text-red-500">
+                      <Heart className="w-3 h-3" />
+                      <span className="text-xs">0</span>
+                    </button>
+                    <button className="text-gray-500 hover:text-blue-600 text-xs">
+                      Reply
+                    </button>
+                  </div>
+                </div>
+
+                <div className="border-b border-gray-200 pb-3">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm font-medium">R</span>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-gray-800 text-sm">Rishu Maity</span>
+                      <div className="text-gray-500 text-xs">
+                        it was nice
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4 mt-2 ml-10">
+                    <button className="flex items-center space-x-1 text-gray-500 hover:text-red-500">
+                      <Heart className="w-3 h-3" />
+                      <span className="text-xs">0</span>
+                    </button>
+                    <button className="text-gray-500 hover:text-blue-600 text-xs">
+                      Reply
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Image Panel - Right Side */}
-          <div className="lg:col-span-3 relative h-full">
-            <div className="relative h-full overflow-hidden">
-              <img
-                src={currentSlideData.image}
-                alt={currentSlideData.title}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black/20"></div>
-
-              {/* Slide Navigation */}
-              {slides.length > 1 && (
-                <div className="absolute bottom-6 left-6 flex space-x-2">
-                  {slides.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentSlide(index)}
-                      className={`w-3 h-3 rounded-full transition-opacity ${
-                        currentSlide === index
-                          ? 'bg-yellow-500 opacity-100'
-                          : 'bg-white opacity-50 hover:opacity-100'
-                      }`}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
         </div>
+      </div>
+
+      {/* Social sidebar (right edge) */}
+      <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex flex-col space-y-4 z-20">
+        <a href="#" className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors">
+          <span className="text-sm font-bold">f</span>
+        </a>
+        <a href="#" className="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white hover:bg-gray-800 transition-colors">
+          <span className="text-sm font-bold">X</span>
+        </a>
+        <a href="#" className="w-10 h-10 bg-pink-600 rounded-full flex items-center justify-center text-white hover:bg-pink-700 transition-colors">
+          <span className="text-sm font-bold">@</span>
+        </a>
+        <a href="#" className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white hover:bg-red-700 transition-colors">
+          <span className="text-sm font-bold">▶</span>
+        </a>
+        <a href="#" className="w-10 h-10 bg-blue-700 rounded-full flex items-center justify-center text-white hover:bg-blue-800 transition-colors">
+          <span className="text-sm font-bold">in</span>
+        </a>
+        <a href="#" className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white hover:bg-green-700 transition-colors">
+          <span className="text-sm font-bold">📱</span>
+        </a>
       </div>
     </section>
   );

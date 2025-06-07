@@ -20,20 +20,43 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 
 const registrationSchema = z.object({
+  // Section 1: Personal Details
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
-  email: z.string().email('Please enter a valid email address'),
-  phone: z.string().min(10, 'Please enter a valid phone number'),
   dateOfBirth: z.string().min(1, 'Date of birth is required'),
-  position: z.string().min(1, 'Playing position is required'),
+  gender: z.string().min(1, 'Gender is required'),
+  state: z.string().min(1, 'State is required'),
+  
+  // Section 2: Contact Information
+  email: z.string().email('Please enter a valid email address'),
+  contactNumber: z.string().min(10, 'Please enter a valid contact number'),
+  emergencyContactName: z.string().min(1, 'Emergency contact name is required'),
+  emergencyContactNumber: z.string().min(10, 'Please enter a valid emergency contact number'),
+  addressLine1: z.string().min(1, 'Address Line 1 is required'),
+  addressLine2: z.string().optional(),
+  townCity: z.string().min(1, 'Town/City is required'),
+  
+  // Section 3: Cricket Experience & Preferences
+  experienceLevel: z.string().min(1, 'Experience level is required'),
   battingStyle: z.string().optional(),
   bowlingStyle: z.string().optional(),
-  experience: z.string().optional(),
-  previousTeams: z.string().optional(),
-  emergencyContactName: z.string().optional(),
-  emergencyContactPhone: z.string().optional(),
-  motivation: z.string().optional(),
-  terms: z.boolean().refine(val => val === true, 'You must agree to the terms and conditions'),
+  preferredPosition: z.string().optional(),
+  highestLevelPlayed: z.string().optional(),
+  
+  // Section 4: Medical Information
+  medicalConditions: z.string().optional(),
+  allergies: z.string().optional(),
+  
+  // Section 5: For Players Under 18 Years Old
+  parentGuardianName: z.string().optional(),
+  
+  // Section 6: Consents & Agreements
+  codeOfConduct: z.boolean().refine(val => val === true, 'You must agree to the Code of Conduct'),
+  privacyConsent: z.boolean().refine(val => val === true, 'You must consent to the privacy policy'),
+  dataProcessing: z.boolean().refine(val => val === true, 'You must consent to data processing'),
+  
+  // Section 7: How Did You Hear About Tuskers CC?
+  hearAboutUs: z.string().optional(),
 });
 
 type RegistrationForm = z.infer<typeof registrationSchema>;
@@ -47,23 +70,33 @@ export default function RegistrationPage() {
     defaultValues: {
       firstName: '',
       lastName: '',
-      email: '',
-      phone: '',
       dateOfBirth: '',
-      position: '',
+      gender: '',
+      state: '',
+      email: '',
+      contactNumber: '',
+      emergencyContactName: '',
+      emergencyContactNumber: '',
+      addressLine1: '',
+      addressLine2: '',
+      townCity: '',
+      experienceLevel: '',
       battingStyle: '',
       bowlingStyle: '',
-      experience: '',
-      previousTeams: '',
-      emergencyContactName: '',
-      emergencyContactPhone: '',
-      motivation: '',
-      terms: false,
+      preferredPosition: '',
+      highestLevelPlayed: '',
+      medicalConditions: '',
+      allergies: '',
+      parentGuardianName: '',
+      codeOfConduct: false,
+      privacyConsent: false,
+      dataProcessing: false,
+      hearAboutUs: '',
     },
   });
 
   const registrationMutation = useMutation({
-    mutationFn: async (data: Omit<RegistrationForm, 'terms'>) => {
+    mutationFn: async (data: Omit<RegistrationForm, 'codeOfConduct' | 'privacyConsent' | 'dataProcessing'>) => {
       return await apiRequest('POST', '/api/registrations', data);
     },
     onSuccess: () => {
@@ -86,17 +119,24 @@ export default function RegistrationPage() {
 
   const onSubmit = (data: RegistrationForm) => {
     setIsSubmitting(true);
-    const { terms, ...registrationData } = data;
+    const { codeOfConduct, privacyConsent, dataProcessing, ...registrationData } = data;
     registrationMutation.mutate(registrationData);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-800 py-16">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-4">Season Registration</h1>
-          <p className="text-xl text-blue-300 max-w-3xl mx-auto">
-            Join Tuskers Cricket Club for the upcoming season. Fill out the form below to register your interest.
+    <div className="min-h-screen bg-gradient-to-b from-blue-600 to-blue-800 py-12">
+      <div className="container mx-auto px-4 max-w-3xl">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-yellow-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <span className="text-2xl font-bold text-blue-900">🏏</span>
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-2">Tuskers CC - Player Registration Form</h1>
+          <p className="text-blue-200">Season 2025/26</p>
+          <p className="text-sm text-blue-300 mt-4 max-w-2xl mx-auto">
+            We're excited to have you join us for the Tuskers CC! Please all the form below, 
+            all information provided will be kept confidential and used only for club purposes. 
+            Please read our club <a href="#" className="underline">Terms Policy</a>.
           </p>
         </div>
 
